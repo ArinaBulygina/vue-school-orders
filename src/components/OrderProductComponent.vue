@@ -83,10 +83,8 @@
          onImageChange(event) {
          const file = event.target.files[0];
          if (file) {
-            // Создайте URL для отображения
             this.imageUrl = URL.createObjectURL(file);
-            // Убедитесь, что вы сохраняете имя файла
-            this.product.img = file.name; // Сохраняем только имя файла
+            this.product.img = this.imageUrl;
          }
          },
          clearImage() {

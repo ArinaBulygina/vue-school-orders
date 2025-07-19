@@ -53,59 +53,50 @@
 
 <script>
 import SearchComponent from '@/components/SearchComponent.vue';
-import data from '@/assets/data.json';
-
-
+import products from '@/api/products';
+import store from '@/store/store';
 
 export default {
    components: {'search-field': SearchComponent},
    data() {
    return {
       searchQuery: '',
-      orders: [
-         [data.gadgets[0], data.gadgets[1]],
-         [data.gadgets[2], data.gadgets[3]],
-         [data.gadgets[4], data.gadgets[5]],
-         [data.gadgets[6], data.gadgets[7]],
-         [data.gadgets[8], data.gadgets[9]],
-         [data.gadgets[10], data.gadgets[11]],
-      ]
-   }
-},
-mounted() {
-   const ordersFromLs = localStorage.getItem('orders');
-   if (ordersFromLs) {
-      this.orders = JSON.parse(ordersFromLs);
-   } else {
-      localStorage.setItem('orders', JSON.stringify(this.orders));
-   }
-   const orderQuery = this.$route.query.order;
-   if (orderQuery) {
-      const order = JSON.parse(orderQuery);
-      const isExist = this.orders.some(existingOrder => 
-         JSON.stringify(existingOrder) === JSON.stringify(order)
-      );
-      if (!isExist) {
-         this.orders.push(order);
-         localStorage.setItem('orders', JSON.stringify(this.orders));
+   }},
+   computed: {
+      orders () {
+         return store.state.gadgets;
+      },
+      filteredOrders() {
+         const query = this.searchQuery.toLowerCase();
+         if (!query) {
+            return this.orders;
+         }
+         return this.orders.filter(order =>
+            order.some(item =>
+               item.brand.toLowerCase().includes(query) ||
+               item.model.toLowerCase().includes(query) ||
+               item.type.toLowerCase().includes(query)
+            )
+         );
       }
-   }
-},
-computed: {
-   filteredOrders() {
-      const query = this.searchQuery.toLowerCase();
-      if (!query) {
-         return this.orders;
+   },
+   created() {
+      products.getGadgets(orders => {
+         store.commit('setGadgets', orders)
+      })
+   },
+   mounted() {
+      const orderQuery = this.$route.query.order;
+      if (orderQuery) {
+         const order = JSON.parse(orderQuery);
+         const isExist = this.orders.some(existingOrder => 
+            JSON.stringify(existingOrder) === JSON.stringify(order)
+         );
+         if (!isExist) {
+            store.commit('addGadget', order);
+         }
       }
-      return this.orders.filter(order =>
-         order.some(item =>
-            item.brand.toLowerCase().includes(query) ||
-            item.model.toLowerCase().includes(query) ||
-            item.type.toLowerCase().includes(query)
-         )
-      );
-   }
-},
+   },
    methods: {
       getWord(n, words) {
          n = Math.abs(n) % 100;
@@ -117,7 +108,7 @@ computed: {
       },
       updateSearchQuery(query) {
          this.searchQuery = query;
-      }
-   }
+      },
+   },
 }
 </script>
